@@ -1,4 +1,8 @@
-[![Build Status](https://travis-ci.org/keboola/sapi-python-client.svg?branch=master)](https://travis-ci.org/keboola/sapi-python-client)
+The only difference between keboola and this version is tbe option to keep split files in `client.tables.export_to_file` (see in Client Class Usage below). This option is useful when downloading very large tables which are split into multiple smaller slices and then merged. Since the keboola implementation [does this in memory](https://github.com/keboola/sapi-python-client/blob/ba1f4c82f88747ebe3bc2a29f3a9c5d9013c9fa7/kbcstorage/files.py#L284-L290), this can easily crash on `OSError: [Errno 28] No space left on device` when the table is sufficiently large.
+
+In this fork, individual table slices are no longer deleted before the merge is successfuly completed and with the option `keep_split_files=True` they can be preserved regardless. 
+
+This is option is False by default and is ignored when the file is not split.
 
 # Python client for the Keboola Storage API
 Client for using [Keboola Connection Storage API](http://docs.keboola.apiary.io/). This API client provides client methods to get data from KBC and store data in KBC. The endpoints 
@@ -6,7 +10,7 @@ for working with buckets, tables and workspaces are covered.
 
 ## Install
 
-`$ pip3 install git+https://github.com/keboola/sapi-python-client.git`
+`$ pip3 install git+https://github.com/TiborMach/sapi-python-client.git`
 
 or 
 
@@ -23,6 +27,9 @@ client = Client('https://connection.keboola.com', 'your-token')
 
 # get table data into local file
 client.tables.export_to_file(table_id='in.c-demo.some-table', path_name='/data/')
+
+# get table data into local file and keep split files in case of a split
+client.tables.export_to_file(table_id='in.c-demo.some-table', path_name='/data/', keep_split_files=True)
 
 # save data
 client.tables.create(name='some-table-2', bucket_id='in.c-demo', file_path='/data/some-table')
