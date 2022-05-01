@@ -15,7 +15,7 @@ for working with buckets, tables and workspaces are covered.
 or 
 
 ```bash
-$ git clone https://github.com/keboola/sapi-python-client.git && cd sapi-python-client
+$ git clone https://github.com/Tibormach/sapi-python-client.git && cd sapi-python-client
 $ python setup.py install
 ```
 
