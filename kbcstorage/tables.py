@@ -361,7 +361,7 @@ class Tables(Endpoint):
                        file_format='rfc', changed_since=None,
                        changed_until=None, columns=None,
                        where_column=None, where_values=None,
-                       where_operator='eq', is_gzip=True):
+                       where_operator='eq', is_gzip=True, keep_split_files=False):
         """
         Export data from a table to a local file
 
@@ -381,6 +381,9 @@ class Tables(Endpoint):
             where_values (list): Values for exporting only matching rows
             columns (list): List of columns to display
             is_gzip (bool): Result will be gzipped
+            keep_split_files (bool): If the table is split, split files will be kept
+                after merging to a single file (helps with recovery in case of memory
+                issues during merging)
 
         Returns:
             destination_file: Local file with exported data
@@ -390,13 +393,19 @@ class Tables(Endpoint):
         """
 
         table_detail = self.detail(table_id)
-        job = self.export_raw(table_id=table_id, limit=limit,
-                              file_format=file_format,
-                              changed_since=changed_since,
-                              changed_until=changed_until, columns=columns,
-                              where_column=where_column,
-                              where_values=where_values,
-                              where_operator=where_operator, is_gzip=is_gzip)
+        job = self.export_raw(
+            table_id=table_id,
+            limit=limit,
+            file_format=file_format,
+            changed_since=changed_since,
+            changed_until=changed_until,
+            columns=columns,
+            where_column=where_column,
+            where_values=where_values,
+            where_operator=where_operator,
+            is_gzip=is_gzip,
+            keep_split_files=keep_split_files
+            )
         jobs = Jobs(self.root_url, self.token)
         job = jobs.block_until_completed(job['id'])
         if job['status'] == 'error':
@@ -404,7 +413,7 @@ class Tables(Endpoint):
         files = Files(self.root_url, self.token)
         temp_path = tempfile.TemporaryDirectory()
         local_file = files.download(file_id=job['results']['file']['id'],
-                                    local_path=temp_path.name)
+                                    local_path=temp_path.name, keep_split_files=keep_split_files)
         destination_file = os.path.join(path_name, table_detail['name'])
         # the file containing table export is always without headers (it is
         # always sliced on Snowflake and Redshift

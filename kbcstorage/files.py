@@ -174,14 +174,14 @@ class Files(Endpoint):
             params['maxId'] = max_id
         return self._get(self.base_url, params=params)
 
-    def download(self, file_id, local_path):
+    def download(self, file_id, local_path, keep_split_files=False):
         if not os.path.exists(local_path):
             os.mkdir(local_path)
         file_info = self.detail(file_id=file_id, federation_token=True)
         local_file = os.path.join(local_path, file_info['name'])
         if file_info['provider'] == 'azure':
             if file_info['isSliced']:
-                self.__download_sliced_file_from_azure(file_info, local_file)
+                self.__download_sliced_file_from_azure(file_info, local_file, keep_split_files)
             else:
                 self.__download_file_from_azure(file_info, local_file)
         elif file_info['provider'] == 'aws':
@@ -193,7 +193,7 @@ class Files(Endpoint):
                 region_name=file_info['region']
             )
             if file_info['isSliced']:
-                self.__download_sliced_file_from_aws(file_info, local_file, s3)
+                self.__download_sliced_file_from_aws(file_info, local_file, s3, keep_split_files)
             else:
                 self.__download_file_from_aws(file_info, local_file, s3)
         return local_file
@@ -237,7 +237,7 @@ class Files(Endpoint):
         bucket = s3.Bucket(file_info["s3Path"]["bucket"])
         bucket.download_file(file_info["s3Path"]["key"], destination)
 
-    def __download_sliced_file_from_aws(self, file_info, destination, s3):
+    def __download_sliced_file_from_aws(self, file_info, destination, s3, keep_split_files):
         manifest = requests.get(url=file_info['url']).json()
         file_names = []
         for entry in manifest["entries"]:
@@ -248,7 +248,7 @@ class Files(Endpoint):
             file_key = "/".join(splitted_path[3:])
             bucket = s3.Bucket(file_info['s3Path']['bucket'])
             bucket.download_file(file_key, file_name)
-        self.__merge_split_files(file_names, destination)
+        self.__merge_split_files(file_names, destination, keep_split_files)
 
     def __download_file_from_azure(self, file_info, destination):
         blob_client = self.__get_blob_client(
@@ -260,7 +260,7 @@ class Files(Endpoint):
             download_stream = blob_client.download_blob()
             downloaded_blob.write(download_stream.readall())
 
-    def __download_sliced_file_from_azure(self, file_info, destination):
+    def __download_sliced_file_from_azure(self, file_info, destination, keep_split_files):
         blob_service_client = BlobServiceClient.from_connection_string(
             file_info['absCredentials']['SASConnectionString']
         )
@@ -279,15 +279,19 @@ class Files(Endpoint):
             file_names.append(file_name)
             with open(file_name, "wb") as file_slice:
                 file_slice.write(container_client.download_blob(blob_path).readall())
-        self.__merge_split_files(file_names, destination)
+        self.__merge_split_files(file_names, destination, keep_split_files)
 
-    def __merge_split_files(self, file_names, destination):
+    def __merge_split_files(self, file_names, destination, keep_split_files):
         with open(destination, mode='wb') as out_file:
             for file_name in file_names:
                 with open(file_name, mode='rb') as in_file:
                     for line in in_file:
                         out_file.write(line)
+        # deleting files only after a sucessful merge
+        if not keep_split_files:
+            for file_name in file_names:
                 os.remove(file_name)
+
 
     def __get_blob_client(self, connection_string, container, blob_name):
         blob_service_client = BlobServiceClient.from_connection_string(connection_string)
