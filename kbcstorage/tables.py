@@ -404,7 +404,6 @@ class Tables(Endpoint):
             where_values=where_values,
             where_operator=where_operator,
             is_gzip=is_gzip,
-            keep_split_files=keep_split_files
             )
         jobs = Jobs(self.root_url, self.token)
         job = jobs.block_until_completed(job['id'])
