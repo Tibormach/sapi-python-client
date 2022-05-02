@@ -363,7 +363,7 @@ class Tables(Endpoint):
                        where_column=None, where_values=None,
                        where_operator='eq', is_gzip=True,
                        keep_split_files=False, merge_split_files=True,
-                       temp_dir=None):
+                       ):
         """
         Export data from a table to a local file
 
@@ -389,9 +389,6 @@ class Tables(Endpoint):
             merge_split_files (bool): If the table is split, split files will be kept
                 and no attempt at merging will be made (use the tables.detail method to
                 get the column names in this case)
-            temp_dir (str): Path to a temporary directory used for downloading splitted files
-                Useful in the context of Databricks where some paths are not allowed when
-                using databricks repos            
 
         Returns:
             destination_file: Local file with exported data
@@ -418,12 +415,9 @@ class Tables(Endpoint):
         if job['status'] == 'error':
             raise RuntimeError(job['error']['message'])
         files = Files(self.root_url, self.token)
-        if temp_dir == None:
-            temp_path = tempfile.TemporaryDirectory().name
-        else:
-            temp_path = temp_dir
+        temp_path = tempfile.TemporaryDirectory()
         local_file = files.download(file_id=job['results']['file']['id'],
-                                    local_path=temp_path,
+                                    local_path=temp_path.name,
                                     keep_split_files=keep_split_files,
                                     merge_split_files=merge_split_files
                                     )
