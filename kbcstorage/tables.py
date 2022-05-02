@@ -415,13 +415,14 @@ class Tables(Endpoint):
         if job['status'] == 'error':
             raise RuntimeError(job['error']['message'])
         files = Files(self.root_url, self.token)
-        temp_path = tempfile.TemporaryDirectory()
-        local_file = files.download(file_id=job['results']['file']['id'],
-                                    local_path=temp_path.name,
-                                    keep_split_files=keep_split_files,
-                                    merge_split_files=merge_split_files
-                                    )
         if merge_split_files:
+            temp_path = tempfile.TemporaryDirectory()
+            local_file = files.download(file_id=job['results']['file']['id'],
+                                        local_path=temp_path.name,
+                                        keep_split_files=keep_split_files,
+                                        merge_split_files=merge_split_files
+                                        )
+
             destination_file = os.path.join(path_name, table_detail['name'])
             # the file containing table export is always without headers (it is
             # always sliced on Snowflake and Redshift
@@ -444,6 +445,12 @@ class Tables(Endpoint):
                 for line in in_file:
                     out_file.write(line)
             return destination_file
+        else:
+            files.download(file_id=job['results']['file']['id'],
+                        local_path=path_name,
+                        keep_split_files=keep_split_files,
+                        merge_split_files=merge_split_files
+                        )
 
     def export(self, table_id, limit=None, file_format='rfc',
                changed_since=None, changed_until=None, columns=None,
