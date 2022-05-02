@@ -251,6 +251,7 @@ class Files(Endpoint):
         keep_split_files, merge_split_files, local_path):
 
         manifest = requests.get(url=file_info['url']).json()
+        bucket = s3.Bucket(file_info['s3Path']['bucket'])
         file_names = []
         for entry in manifest["entries"]:
             full_path = entry["url"]
@@ -258,7 +259,8 @@ class Files(Endpoint):
             file_names.append(file_name)
             splitted_path = full_path.split("/")
             file_key = "/".join(splitted_path[3:])
-            bucket = s3.Bucket(file_info['s3Path']['bucket'])
+            print(file_key)
+            print(os.path.join(local_path, file_name))
             bucket.download_file(file_key, os.path.join(local_path, file_name))
         if merge_split_files:
             self.__merge_split_files(file_names, destination, keep_split_files)
