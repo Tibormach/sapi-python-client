@@ -202,7 +202,10 @@ class Files(Endpoint):
                     )
             else:
                 self.__download_file_from_aws(file_info, local_file, s3)
-        return local_file
+        if merge_split_files:
+            return local_file
+        else:
+            return
 
     def __upload_to_azure(self, preparation_result, file_path):
         blob_client = self.__get_blob_client(

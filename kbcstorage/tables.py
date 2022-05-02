@@ -421,28 +421,29 @@ class Tables(Endpoint):
                                     keep_split_files=keep_split_files,
                                     merge_split_files=merge_split_files
                                     )
-        destination_file = os.path.join(path_name, table_detail['name'])
-        # the file containing table export is always without headers (it is
-        # always sliced on Snowflake and Redshift
-        if is_gzip:
-            import gzip
-            import shutil
-            with gzip.open(local_file, 'rb') as f_in, \
-                    open(local_file + '.un', 'wb') as f_out:
-                shutil.copyfileobj(f_in, f_out)
-            os.remove(local_file)
-            local_file = local_file + '.un'
+        if merge_split_files:
+            destination_file = os.path.join(path_name, table_detail['name'])
+            # the file containing table export is always without headers (it is
+            # always sliced on Snowflake and Redshift
+            if is_gzip:
+                import gzip
+                import shutil
+                with gzip.open(local_file, 'rb') as f_in, \
+                        open(local_file + '.un', 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+                os.remove(local_file)
+                local_file = local_file + '.un'
 
-        with open(local_file, mode='rb') as in_file, \
-                open(destination_file, mode='wb') as out_file:
-            if columns is None:
-                columns = table_detail['columns']
-            columns = ['"{}"'.format(col) for col in columns]
-            header = ",".join(columns) + '\n'
-            out_file.write(header.encode('utf-8'))
-            for line in in_file:
-                out_file.write(line)
-        return destination_file
+            with open(local_file, mode='rb') as in_file, \
+                    open(destination_file, mode='wb') as out_file:
+                if columns is None:
+                    columns = table_detail['columns']
+                columns = ['"{}"'.format(col) for col in columns]
+                header = ",".join(columns) + '\n'
+                out_file.write(header.encode('utf-8'))
+                for line in in_file:
+                    out_file.write(line)
+            return destination_file
 
     def export(self, table_id, limit=None, file_format='rfc',
                changed_since=None, changed_until=None, columns=None,
