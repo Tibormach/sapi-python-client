@@ -198,7 +198,7 @@ class Files(Endpoint):
             if file_info['isSliced']:
                 self.__download_sliced_file_from_aws(
                     file_info, local_file,
-                    s3, keep_split_files, merge_split_files
+                    s3, keep_split_files, merge_split_files, local_path
                     )
             else:
                 self.__download_file_from_aws(file_info, local_file, s3)
@@ -248,7 +248,7 @@ class Files(Endpoint):
 
     def __download_sliced_file_from_aws(
         self, file_info, destination, s3,
-        keep_split_files, merge_split_files):
+        keep_split_files, merge_split_files, local_path):
 
         manifest = requests.get(url=file_info['url']).json()
         file_names = []
@@ -259,7 +259,7 @@ class Files(Endpoint):
             splitted_path = full_path.split("/")
             file_key = "/".join(splitted_path[3:])
             bucket = s3.Bucket(file_info['s3Path']['bucket'])
-            bucket.download_file(file_key, file_name)
+            bucket.download_file(file_key, os.path.join(local_path, file_name))
         if merge_split_files:
             self.__merge_split_files(file_names, destination, keep_split_files)
 
