@@ -361,7 +361,8 @@ class Tables(Endpoint):
                        file_format='rfc', changed_since=None,
                        changed_until=None, columns=None,
                        where_column=None, where_values=None,
-                       where_operator='eq', is_gzip=True, keep_split_files=False):
+                       where_operator='eq', is_gzip=True,
+                       keep_split_files=False, merge_split_files=True):
         """
         Export data from a table to a local file
 
@@ -384,6 +385,9 @@ class Tables(Endpoint):
             keep_split_files (bool): If the table is split, split files will be kept
                 after merging to a single file (helps with recovery in case of memory
                 issues during merging)
+            merge_split_files (bool): If the table is split, split files will be kept
+                and no attempt at merging will be made (use the tables.detail method to
+                get the column names in this case)            
 
         Returns:
             destination_file: Local file with exported data
@@ -412,7 +416,10 @@ class Tables(Endpoint):
         files = Files(self.root_url, self.token)
         temp_path = tempfile.TemporaryDirectory()
         local_file = files.download(file_id=job['results']['file']['id'],
-                                    local_path=temp_path.name, keep_split_files=keep_split_files)
+                                    local_path=temp_path.name,
+                                    keep_split_files=keep_split_files,
+                                    merge_split_files=merge_split_files
+                                    )
         destination_file = os.path.join(path_name, table_detail['name'])
         # the file containing table export is always without headers (it is
         # always sliced on Snowflake and Redshift
