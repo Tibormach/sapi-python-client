@@ -259,7 +259,7 @@ class Files(Endpoint):
             splitted_path = full_path.split("/")
             file_key = "/".join(splitted_path[3:])
             bucket = s3.Bucket(file_info['s3Path']['bucket'])
-            bucket.download_file(file_key, os.path.join(destination, file_name))
+            bucket.download_file(file_key, file_name)
         if merge_split_files:
             self.__merge_split_files(file_names, destination, keep_split_files)
 
