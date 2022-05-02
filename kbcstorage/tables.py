@@ -446,11 +446,15 @@ class Tables(Endpoint):
                     out_file.write(line)
             return destination_file
         else:
+            original_cwd = os.getcwd()
+            os.chdir(path_name)
             files.download(file_id=job['results']['file']['id'],
                         local_path=path_name,
                         keep_split_files=keep_split_files,
                         merge_split_files=merge_split_files
                         )
+            os.chdir(original_cwd)
+
 
     def export(self, table_id, limit=None, file_format='rfc',
                changed_since=None, changed_until=None, columns=None,
