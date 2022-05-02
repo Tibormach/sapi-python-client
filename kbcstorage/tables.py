@@ -418,9 +418,12 @@ class Tables(Endpoint):
         if job['status'] == 'error':
             raise RuntimeError(job['error']['message'])
         files = Files(self.root_url, self.token)
-        temp_path = tempfile.TemporaryDirectory(dir=temp_dir)
+        if temp_dir == None:
+            tempfile.TemporaryDirectory().name
+        else:
+            temp_path = temp_dir
         local_file = files.download(file_id=job['results']['file']['id'],
-                                    local_path=temp_path.name,
+                                    local_path=temp_path,
                                     keep_split_files=keep_split_files,
                                     merge_split_files=merge_split_files
                                     )
