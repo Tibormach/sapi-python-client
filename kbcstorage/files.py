@@ -259,8 +259,6 @@ class Files(Endpoint):
             file_names.append(file_name)
             splitted_path = full_path.split("/")
             file_key = "/".join(splitted_path[3:])
-            print(file_key)
-            print(os.path.join(local_path, file_name))
             bucket.download_file(file_key, os.path.join(local_path, file_name))
         if merge_split_files:
             self.__merge_split_files(file_names, destination, keep_split_files)
