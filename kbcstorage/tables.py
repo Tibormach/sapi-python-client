@@ -419,7 +419,7 @@ class Tables(Endpoint):
             raise RuntimeError(job['error']['message'])
         files = Files(self.root_url, self.token)
         if temp_dir == None:
-            tempfile.TemporaryDirectory().name
+            temp_path = tempfile.TemporaryDirectory().name
         else:
             temp_path = temp_dir
         local_file = files.download(file_id=job['results']['file']['id'],
